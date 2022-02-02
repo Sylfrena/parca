@@ -21,6 +21,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/go-kit/log/level"
+	"github.com/parca-dev/parca/pkg/debuginfo"
 	"github.com/parca-dev/parca/pkg/parca"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -50,6 +51,8 @@ func main() {
 		"commit", commit,
 		"config", fmt.Sprint(flags),
 	)
+
+	debuginfo.LocalDebug("0535451f10caaab5a8469fd010f5342801a95217")
 
 	registry := prometheus.NewRegistry()
 
