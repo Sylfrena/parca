@@ -11,6 +11,31 @@ import (
 
 var localServer = "http://localhost:8002/buildid"
 
+type DebugInfodClient interface {
+	GetDebugInfo(buildid string) (io.ReadCloser, error)
+}
+
+type HttpDebuginfodClient struct {
+	UpstreamServer string //url
+}
+
+func (c *HttpDebuginfodClient) GetDebugInfo(buildid string) (io.ReadCloser, error) {
+	resp, err := http.Get(c.UpstreamServer + "/" + buildid + "/debuginfo")
+	if err != nil {
+		//fmt.Printf("imma gonna panic")
+		return nil, err
+	}
+	return resp.Body, nil
+}
+
+type ObjectStorageDebugInfodClientCache struct {
+	client DebugInfodClient
+}
+
+func (c *ObjectStorageDebugInfodClientCache) GetDebugInfo(buildid string) (io.ReadCloser, error) {
+	return c.client.GetDebugInfo(buildid)
+}
+
 func writeToFile(buildid string) {
 	resp, err := http.Get(localServer + "/" + buildid + "/debuginfo")
 	if err != nil {
