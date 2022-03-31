@@ -28,6 +28,7 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	commonconfig "github.com/prometheus/common/config"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/prometheus/discovery/targetgroup"
 	"github.com/prometheus/prometheus/model/labels"
@@ -467,6 +468,13 @@ mainLoop:
 					Value: l.Value,
 				})
 			}
+
+			for _, l := range tl {
+				if err := model.LabelName(l.Name).IsValid(); err != true {
+					level.Info(sl.l).Log("msg", "invalid label name", "label name do nothing", l.Name)
+				}
+			}
+
 			// Must ensure label-set is sorted
 			sort.Sort(tl)
 			level.Debug(sl.l).Log("msg", "appending new sample", "labels", tl.String())
@@ -475,6 +483,10 @@ mainLoop:
 				Labels: []*profilepb.Label{},
 			}
 			for _, l := range tl {
+				if err := model.LabelName(l.Name).IsValid(); !err {
+					level.Info(sl.l).Log("msg", "invalid label name", "label name drop", l.Name)
+					continue
+				}
 				protolbls.Labels = append(protolbls.Labels, &profilepb.Label{
 					Name:  l.Name,
 					Value: l.Value,
@@ -497,7 +509,7 @@ mainLoop:
 			if err != nil {
 				switch errc {
 				case nil:
-					level.Error(sl.l).Log("msg", "WriteRaw failed for scraped profile", "err", err)
+					level.Warn(sl.l).Log("msg", "WriteRaw failed for scraped profile", "err", err)
 				default:
 					errc <- err
 				}
